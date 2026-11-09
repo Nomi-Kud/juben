@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>剧本杀 · 本单（线上版）</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%8E%AD%3C/text%3E%3C/svg%3E">
+<style>
+/* 剧本杀本单 · 移动端风格样式（参照小程序 / 迷圈 / 千岛的剧本库形态） */
+:root {
+  --bg: #0f1015;
+  --bg2: #15161d;
+  --card: #1b1d26;
+  --card2: #23252f;
+  --line: #2b2e3a;
+  --text: #f2f3f7;
+  --muted: #9aa0b0;
+  --gold: #e6b455;
+  --gold2: #f5d18a;
+  --gold-dim: rgba(230, 180, 85, 0.14);
+  --red: #ff7a7a;
+  --green: #5fd39a;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  background: #08090c;
+  color: var(--text);
+  font-family: system-ui, -apple-system, "PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+#app {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.boot-loading { padding: 40vh 16px; text-align: center; color: var(--muted); }
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+input, select, textarea { font-family: inherit; font-size: 15px; }
+
+.page { padding-bottom: 40px; }
+
+/* ---------- 顶栏 ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px 10px;
+  background: linear-gradient(180deg, rgba(15, 16, 21, 0.98), rgba(15, 16, 21, 0.92));
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand .logo {
+  width: 40px; height: 40px; border-radius: 12px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  background: linear-gradient(135deg, #3a2f14, #6b5322);
+  border: 1px solid rgba(230, 180, 85, 0.4);
+}
+.brand h1 { font-size: 17px; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.brand .slogan { font-size: 12px; color: var(--gold); opacity: 0.9; }
+.topbar .total { margin-left: auto; flex: none; font-size: 12px; color: var(--muted); text-align: right; }
+.topbar .total b { color: var(--gold); font-size: 16px; font-weight: 700; }
+
+/* ---------- 公告 ---------- */
+.notice {
+  display: flex; align-items: center; gap: 8px;
+  margin: 10px 12px 0; padding: 8px 12px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(230, 180, 85, 0.25);
+  border-radius: 10px; font-size: 12.5px; color: var(--gold2);
+  overflow: hidden;
+}
+.notice .icon { flex: none; }
+.notice .txt {
+  flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---------- 搜索 ---------- */
+.search { padding: 10px 12px 4px; }
+.search input {
+  width: 100%; padding: 10px 14px 10px 38px;
+  background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%239aa0b0' viewBox='0 0 16 16'%3E%3Cpath d='M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z'/%3E%3C/svg%3E") 12px center / 16px no-repeat;
+  border: 1px solid var(--line); border-radius: 999px;
+  color: var(--text); outline: none;
+}
+.search input::placeholder { color: #6b7180; }
+
+/* ---------- 筛选 ---------- */
+.chip-row {
+  display: flex; gap: 8px; overflow-x: auto; padding: 8px 12px 2px;
+  scrollbar-width: none;
+}
+.chip-row::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; padding: 5px 14px; border-radius: 999px;
+  background: var(--card); border: 1px solid var(--line);
+  color: var(--muted); font-size: 13px; transition: all 0.15s;
+}
+.chip.on {
+  background: var(--gold-dim); border-color: var(--gold); color: var(--gold2); font-weight: 600;
+}
+.sort-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 14px 4px; color: var(--muted); font-size: 12px;
+}
+.sort-row select {
+  margin-left: auto; background: var(--card); color: var(--text);
+  border: 1px solid var(--line); border-radius: 8px; padding: 4px 8px; outline: none;
+}
+
+/* ---------- 剧本卡片 ---------- */
+.list { padding: 8px 12px 20px; display: flex; flex-direction: column; gap: 10px; }
+.card {
+  display: flex; gap: 12px; padding: 10px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: transform 0.12s;
+}
+.card:active { transform: scale(0.985); }
+.card .cover { flex: none; width: 86px; border-radius: 8px; overflow: hidden; position: relative; }
+.card .cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.card .info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.card .title-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.card .title { font-size: 15.5px; font-weight: 700; }
+.card .tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.tag {
+  font-size: 11px; padding: 1px 8px; border-radius: 999px;
+  background: var(--card2); color: var(--muted); border: 1px solid var(--line);
+}
+.card .meta { margin-top: auto; font-size: 12px; color: var(--muted); padding-top: 8px; }
+.card .bottom { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; }
+.price { color: var(--gold); font-weight: 800; font-size: 18px; }
+.price small { font-size: 11px; font-weight: 400; color: var(--muted); }
+.member-price { font-size: 11.5px; color: var(--green); }
+
+/* 类型徽标 */
+.badge {
+  flex: none; font-size: 10.5px; font-weight: 600; padding: 1px 7px;
+  border-radius: 5px; line-height: 1.6; vertical-align: 2px;
+}
+.badge.box { background: #2a3346; color: #9db6e0; }
+.badge.city { background: rgba(230, 180, 85, 0.16); color: var(--gold2); border: 1px solid rgba(230, 180, 85, 0.5); }
+.badge.excl { background: rgba(255, 122, 122, 0.14); color: var(--red); border: 1px solid rgba(255, 122, 122, 0.5); }
+.fire { flex: none; font-size: 12px; }
+
+/* 封面占位图 */
+.cover-ph {
+  width: 100%; height: 100%; min-height: 112px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 8px; text-align: center;
+}
+.cover-ph .ph-title {
+  font-weight: 800; font-size: 14px; color: rgba(255, 255, 255, 0.92);
+  letter-spacing: 1px; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+.cover-ph .ph-tag { font-size: 10px; color: rgba(255, 255, 255, 0.55); letter-spacing: 2px; }
+
+/* 空态 */
+.empty { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty .big { font-size: 44px; margin-bottom: 12px; }
+
+/* 管理悬浮按钮 */
+.fab {
+  position: fixed; right: max(16px, calc(50% - 260px + 16px)); bottom: 26px;
+  z-index: 30; display: flex; align-items: center; gap: 6px;
+  padding: 11px 18px; border-radius: 999px;
+  background: linear-gradient(135deg, #e6b455, #c98f2e); color: #241a05;
+  font-size: 14px; font-weight: 700;
+  box-shadow: 0 6px 20px rgba(230, 180, 85, 0.35);
+}
+.fab:active { transform: scale(0.95); }
+
+/* ---------- 详情页 ---------- */
+.d-hero { position: relative; }
+.d-hero img { width: 100%; max-height: 46vh; object-fit: cover; display: block; }
+.d-hero .hero-ph { height: 40vh; }
+.d-hero .shade {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 60%;
+  background: linear-gradient(180deg, transparent, rgba(15, 16, 21, 0.96));
+}
+.back-btn {
+  position: fixed; top: 14px; left: max(14px, calc(50% - 260px + 14px)); z-index: 30;
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(10, 11, 15, 0.6); border: 1px solid var(--line);
+  color: var(--text); font-size: 16px; backdrop-filter: blur(6px);
+}
+.d-head { padding: 14px 16px 0; }
+.d-head .title { font-size: 21px; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.d-head .sub { margin-top: 8px; color: var(--muted); font-size: 13px; }
+
+.d-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  padding: 14px 16px 0;
+}
+.d-cell {
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 8px; text-align: center;
+}
+.d-cell .k { font-size: 11px; color: var(--muted); }
+.d-cell .v { font-size: 14px; font-weight: 700; margin-top: 2px; }
+.d-cell .v.gold { color: var(--gold); }
+
+.d-section { padding: 16px 16px 0; }
+.d-section h3 {
+  font-size: 15px; margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+}
+.d-section h3::before { content: ""; width: 3px; height: 14px; background: var(--gold); border-radius: 2px; }
+.d-section .body { color: #c9cdd8; font-size: 14px; white-space: pre-wrap; word-break: break-word; }
+.d-note {
+  margin-top: 10px; font-size: 12.5px; color: var(--gold2);
+  background: var(--gold-dim); border: 1px dashed rgba(230, 180, 85, 0.35);
+  padding: 8px 12px; border-radius: 8px;
+}
+
+.d-footer { height: 84px; }
+.price-bar {
+  position: fixed; bottom: 0; z-index: 25;
+  width: 100%; max-width: 520px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+  background: rgba(18, 19, 25, 0.96); border-top: 1px solid var(--line);
+  backdrop-filter: blur(10px);
+}
+.price-bar .p { font-size: 24px; }
+.price-bar .contact-btn {
+  margin-left: auto; padding: 11px 22px; border-radius: 999px;
+  background: linear-gradient(135deg, #e6b455, #c98f2e); color: #241a05;
+  font-weight: 700; font-size: 15px;
+}
+.price-bar .contact-btn:active { transform: scale(0.96); }
+
+/* ---------- 管理后台 ---------- */
+.admin-top {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px; background: var(--bg2);
+  border-bottom: 1px solid var(--line);
+}
+.admin-top .t { font-size: 16px; font-weight: 700; }
+.admin-top .sp { flex: 1; }
+.mini-btn {
+  flex: none; padding: 6px 12px; border-radius: 8px; font-size: 13px;
+  background: var(--card2); border: 1px solid var(--line); color: var(--muted);
+}
+.mini-btn.primary { background: var(--gold-dim); border-color: rgba(230, 180, 85, 0.5); color: var(--gold2); }
+.mini-btn.danger { background: rgba(255, 122, 122, 0.1); border-color: rgba(255, 122, 122, 0.4); color: var(--red); }
+
+.admin-body { padding: 14px 12px 40px; }
+.add-btn {
+  width: 100%; padding: 13px; border-radius: var(--radius); margin-bottom: 14px;
+  background: linear-gradient(135deg, #e6b455, #c98f2e); color: #241a05;
+  font-size: 15px; font-weight: 700;
+}
+.admin-row {
+  display: flex; gap: 10px; align-items: center;
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 10px; margin-bottom: 10px;
+}
+.admin-row .cover { flex: none; width: 46px; border-radius: 6px; overflow: hidden; }
+.admin-row .cover img, .admin-row .cover .cover-ph { height: 60px; }
+.admin-row .cover-ph { min-height: 60px; }
+.admin-row .cover-ph .ph-title { font-size: 10px; -webkit-line-clamp: 2; letter-spacing: 0; }
+.admin-row .mid { flex: 1; min-width: 0; }
+.admin-row .t { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-row .s { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+.admin-row .ops { display: flex; flex-direction: column; gap: 6px; }
+
+/* 登录 */
+.login-wrap { padding: 60px 24px 0; text-align: center; }
+.login-wrap .big { font-size: 52px; }
+.login-wrap h2 { margin: 12px 0 4px; }
+.login-wrap p { color: var(--muted); font-size: 13px; }
+.login-wrap input {
+  width: 100%; margin-top: 26px; padding: 13px 16px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  color: var(--text); outline: none; text-align: center; letter-spacing: 2px;
+}
+.login-wrap .go {
+  width: 100%; margin-top: 14px; padding: 13px; border-radius: 12px;
+  background: linear-gradient(135deg, #e6b455, #c98f2e); color: #241a05; font-weight: 700; font-size: 15px;
+}
+
+/* 表单 */
+.form { padding: 14px 16px 60px; }
+.form .fg { margin-bottom: 14px; }
+.form label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.form label b { color: var(--gold); }
+.form input[type="text"], .form input[type="number"], .form input[type="password"],
+.form select, .form textarea {
+  width: 100%; padding: 10px 12px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  color: var(--text); outline: none;
+}
+.form textarea { min-height: 110px; resize: vertical; }
+.form input:focus, .form textarea:focus, .form select:focus { border-color: var(--gold); }
+.form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.form .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.form .hint { font-size: 11.5px; color: #6b7180; margin-top: 4px; }
+.genre-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.cover-edit { display: flex; gap: 12px; align-items: center; }
+.cover-edit .preview { flex: none; width: 86px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.cover-edit .preview img, .cover-edit .preview .cover-ph { height: 112px; }
+.cover-edit .btns { display: flex; flex-direction: column; gap: 8px; }
+.file-btn { position: relative; overflow: hidden; }
+.file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.form-actions { display: flex; gap: 10px; margin-top: 20px; }
+.form-actions button {
+  flex: 1; padding: 13px; border-radius: 12px; font-size: 15px; font-weight: 700;
+}
+.form-actions .save { background: linear-gradient(135deg, #e6b455, #c98f2e); color: #241a05; }
+.form-actions .cancel { background: var(--card); border: 1px solid var(--line); color: var(--muted); }
+.check-line { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.check-line input { width: 16px; height: 16px; accent-color: var(--gold); }
+.check-line span { font-size: 13.5px; }
+
+/* Toast */
+.toast {
+  position: fixed; left: 50%; bottom: 100px; transform: translateX(-50%);
+  z-index: 99; max-width: 80%;
+  background: rgba(30, 32, 42, 0.96); color: var(--text);
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 18px; font-size: 13.5px; white-space: pre-wrap;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+/* ================= 开屏动态封面 ================= */
+.splash {
+  position: fixed; inset: 0; z-index: 200; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  background: #07080c;
+  cursor: pointer;
+  animation: sp-in 0.6s ease-out;
+}
+.splash.out { animation: sp-out 0.6s ease-in forwards; pointer-events: none; }
+@keyframes sp-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes sp-out { to { opacity: 0; transform: scale(1.04); } }
+
+.splash .sp-bg {
+  position: absolute; inset: -6%;
+  background-size: cover; background-position: center;
+  animation: sp-zoom 14s ease-in-out infinite alternate;
+}
+@keyframes sp-zoom { from { transform: scale(1); } to { transform: scale(1.08); } }
+
+.splash .sp-fog {
+  position: absolute; border-radius: 50%; filter: blur(70px); opacity: 0.5;
+}
+.splash .sp-fog.a { width: 70vw; height: 70vw; left: -20vw; top: -10vh; background: radial-gradient(circle, #4b2f6e, transparent 65%); animation: sp-drift1 11s ease-in-out infinite alternate; }
+.splash .sp-fog.b { width: 60vw; height: 60vw; right: -18vw; bottom: -8vh; background: radial-gradient(circle, #6e3d2f, transparent 65%); animation: sp-drift2 13s ease-in-out infinite alternate; }
+.splash .sp-fog.c { width: 46vw; height: 46vw; left: 28vw; top: 32vh; background: radial-gradient(circle, #2f4b6e, transparent 65%); opacity: 0.35; animation: sp-drift1 17s ease-in-out infinite alternate-reverse; }
+@keyframes sp-drift1 { to { transform: translate(8vw, 5vh) scale(1.12); } }
+@keyframes sp-drift2 { to { transform: translate(-7vw, -6vh) scale(1.1); } }
+
+.splash .sp-shade {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at center, transparent 30%, rgba(5, 6, 10, 0.75) 100%),
+    linear-gradient(180deg, rgba(5, 6, 10, 0.35), transparent 30%, transparent 60%, rgba(5, 6, 10, 0.85));
+}
+.splash .sp-inner { position: relative; text-align: center; padding: 0 30px; }
+.splash .sp-logo {
+  font-size: 64px; margin-bottom: 14px;
+  animation: sp-pop 0.9s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  filter: drop-shadow(0 6px 24px rgba(230, 180, 85, 0.35));
+}
+@keyframes sp-pop { from { transform: scale(0.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.splash .sp-title {
+  font-size: 30px; letter-spacing: 8px; font-weight: 800; color: #f7f3ea;
+  text-shadow: 0 4px 24px rgba(0, 0, 0, 0.8);
+  animation: sp-up 1s 0.25s ease-out both;
+}
+.splash .sp-slogan {
+  margin-top: 12px; font-size: 14px; letter-spacing: 4px; color: var(--gold2);
+  animation: sp-up 1s 0.45s ease-out both;
+}
+@keyframes sp-up { from { transform: translateY(18px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.splash .sp-enter {
+  position: absolute; bottom: 8vh; left: 0; right: 0; text-align: center;
+  font-size: 13px; letter-spacing: 5px; color: rgba(242, 243, 247, 0.75);
+  animation: sp-breathe 2.2s ease-in-out infinite;
+}
+@keyframes sp-breathe { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+
+/* ================= 评分星 ================= */
+.stars { position: relative; display: inline-block; line-height: 1; vertical-align: -1px; }
+.stars .stars-bg { color: #3a3e4c; letter-spacing: 1px; }
+.stars .stars-fill {
+  position: absolute; left: 0; top: 0; overflow: hidden; white-space: nowrap;
+  color: var(--gold); letter-spacing: 1px;
+}
+.stars-num { font-size: 11.5px; color: var(--gold2); margin-left: 5px; }
+.rate-wrap { margin-left: auto; }
+.rate { font-size: 11px; }
+.rate.none { color: #5c6170; }
+
+/* ================= 店长推荐（置顶） ================= */
+.sec-title {
+  display: flex; align-items: center; gap: 8px;
+  margin: 16px 16px 10px; font-size: 15.5px; font-weight: 800;
+}
+.sec-title.plain { margin-top: 6px; font-size: 14px; color: var(--muted); font-weight: 600; }
+.rec { margin-top: 4px; }
+.rec-scroll {
+  display: flex; gap: 10px; overflow-x: auto; padding: 2px 16px 6px;
+  scrollbar-width: none;
+}
+.rec-scroll::-webkit-scrollbar { display: none; }
+.rec-card {
+  flex: none; width: 118px; border-radius: 12px; overflow: hidden;
+  background: var(--card); border: 1px solid var(--line);
+  transition: transform 0.12s;
+}
+.rec-card:active { transform: scale(0.97); }
+.rec-cover { width: 118px; height: 156px; overflow: hidden; }
+.rec-cover img, .rec-cover .cover-ph { width: 100%; height: 100%; }
+.rec-name {
+  padding: 7px 8px 1px; font-size: 13px; font-weight: 700;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rec-sub { padding: 0 8px; font-size: 11px; color: var(--muted); }
+.rec-price { padding: 3px 8px 9px; color: var(--gold); font-weight: 800; font-size: 15px; }
+.rec-price small { font-size: 10px; color: var(--muted); font-weight: 400; }
+.pin-flag { font-size: 11.5px; color: var(--gold2); flex: none; }
+.card.is-pinned { border-color: rgba(230, 180, 85, 0.45); }
+
+/* ================= 详情页评分卡与评论区 ================= */
+.rating-card {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, #241f12, #1b1d26 60%);
+  border: 1px solid rgba(230, 180, 85, 0.3);
+  border-radius: 12px; padding: 14px; margin-bottom: 12px;
+}
+.rc-avg { font-size: 38px; font-weight: 800; color: var(--gold); line-height: 1; }
+.rc-stars { margin-top: 6px; font-size: 13px; }
+.rc-count { margin-top: 5px; font-size: 11.5px; color: var(--muted); }
+.rc-write {
+  margin-left: auto; flex: none; padding: 10px 16px; border-radius: 999px;
+  background: linear-gradient(135deg, #e6b455, #c98f2e); color: #241a05;
+  font-weight: 700; font-size: 13.5px;
+}
+.rc-write:active { transform: scale(0.95); }
+
+.review { display: flex; gap: 10px; padding: 12px 2px; border-bottom: 1px solid var(--line); }
+.review:last-of-type { border-bottom: none; }
+.rv-avatar {
+  flex: none; width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff; font-weight: 700; font-size: 15px;
+}
+.rv-main { flex: 1; min-width: 0; }
+.rv-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.rv-name { font-size: 13px; font-weight: 700; }
+.rv-src {
+  font-size: 10px; padding: 0 6px; border-radius: 4px; line-height: 1.7;
+  background: #24403050; color: #7fc79e; border: 1px solid #2f5a44;
+}
+.rv-src.net { background: #2a334650; color: #9db6e0; border-color: #374b6e; }
+.rv-time { margin-left: auto; font-size: 11px; color: #6b7180; }
+.rv-content { margin-top: 5px; font-size: 13.5px; color: #c9cdd8; word-break: break-word; white-space: pre-wrap; }
+.rv-empty { padding: 22px 0 6px; text-align: center; color: var(--muted); font-size: 13px; }
+
+.rv-form {
+  margin-top: 12px; padding: 14px; border-radius: 12px;
+  background: var(--card2); border: 1px solid var(--line);
+  display: none;
+}
+.rv-form.open, #review-form-box.open .rv-form { display: block; }
+.rv-form input, .rv-form textarea {
+  width: 100%; margin-top: 10px; padding: 10px 12px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+  color: var(--text); outline: none; font-family: inherit; font-size: 14px;
+}
+.rv-form textarea { min-height: 84px; resize: vertical; }
+.rv-form input:focus, .rv-form textarea:focus { border-color: var(--gold); }
+.star-pick { display: inline-flex; gap: 6px; }
+.star-pick button {
+  font-size: 26px; color: #3a3e4c; transition: all 0.1s; padding: 2px;
+}
+.star-pick button.on { color: var(--gold); transform: scale(1.12); text-shadow: 0 0 12px rgba(230, 180, 85, 0.5); }
+.rv-form-actions { display: flex; gap: 10px; margin-top: 12px; }
+.rv-form-actions .mini-btn { flex: 1; padding: 10px; }
+.rv-go {
+  flex: 1.4; padding: 10px; border-radius: 8px; font-weight: 700;
+  background: linear-gradient(135deg, #e6b455, #c98f2e); color: #241a05;
+}
+
+/* ================= 管理后台：快捷入口 / 导入 / 评论 ================= */
+.qgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+.qcard {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 12px 4px; border-radius: 12px; font-size: 12px;
+  background: var(--card); border: 1px solid var(--line); color: var(--muted);
+}
+.qcard .qi { font-size: 22px; }
+.qcard:active { transform: scale(0.96); }
+.qcard.add { border-color: rgba(230, 180, 85, 0.4); color: var(--gold2); background: var(--gold-dim); }
+.qcard.imp { border-color: rgba(157, 182, 224, 0.35); color: #9db6e0; background: rgba(42, 51, 70, 0.35); }
+.qcard.rev { border-color: rgba(127, 199, 158, 0.3); color: #7fc79e; background: rgba(36, 64, 48, 0.3); }
+.mini-btn.on { background: var(--gold-dim); border-color: var(--gold); color: var(--gold2); }
+
+.imp-tip {
+  font-size: 12.5px; color: var(--muted); line-height: 1.7;
+  background: var(--card); border: 1px dashed var(--line);
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 12px;
+}
+.imp-tip b { color: var(--gold2); font-weight: 600; }
+.imp-search { display: flex; gap: 8px; margin-bottom: 12px; }
+.imp-search input {
+  flex: 1; padding: 10px 12px; background: var(--card);
+  border: 1px solid var(--line); border-radius: 10px; color: var(--text); outline: none;
+}
+.imp-search input:focus { border-color: var(--gold); }
+.imp-loading { padding: 26px 10px; text-align: center; color: var(--muted); font-size: 13px; }
+.imp-loading.err { color: var(--red); }
+
+.imp-row {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 10px; margin-bottom: 8px;
+}
+.imp-thumb {
+  flex: none; width: 46px; height: 60px; border-radius: 6px; overflow: hidden;
+  background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+.imp-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.imp-mid { flex: 1; min-width: 0; }
+.imp-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.imp-sub { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+
+.imp-card {
+  margin-top: 14px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px;
+}
+.imp-card-head { display: flex; gap: 12px; }
+.imp-card-cover {
+  flex: none; width: 104px; height: 140px; border-radius: 8px; overflow: hidden;
+  background: var(--card2); display: flex; align-items: center; justify-content: center; font-size: 30px;
+}
+.imp-card-cover img { width: 100%; height: 100%; object-fit: cover; }
+.imp-card-info { flex: 1; min-width: 0; }
+.imp-card-title { font-size: 16px; font-weight: 800; }
+.imp-card-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.gold-star { color: var(--gold); letter-spacing: 2px; }
+.imp-card-intro { margin-top: 10px; font-size: 12.5px; color: #b9becc; line-height: 1.7; }
+.imp-card-rev { margin-top: 8px; font-size: 12px; color: #7fc79e; }
+.imp-form { margin-top: 14px; border-top: 1px solid var(--line); padding-top: 14px; }
+.imp-form label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+.imp-form input, .imp-form select {
+  width: 100%; padding: 9px 10px; background: var(--card2);
+  border: 1px solid var(--line); border-radius: 8px; color: var(--text); outline: none;
+}
+.imp-form .row3 { display: grid; grid-template-columns: 1.2fr 1fr 1fr; gap: 8px; }
+.imp-form .add-btn { margin: 14px 0 0; }
+
+.rev-admin-row {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px;
+  padding: 12px; margin-bottom: 8px;
+}
+.rev-admin-main { flex: 1; min-width: 0; }
+.rev-admin-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.rev-admin-head b { font-size: 13.5px; }
+.rev-admin-content { margin-top: 6px; font-size: 12.5px; color: #b9becc; word-break: break-word; }
+
+/* 发布卡片（第5个入口） */
+.qgrid { grid-template-columns: repeat(auto-fit, minmax(74px, 1fr)); }
+.qcard.pub { border-color: rgba(157, 182, 224, 0.35); color: #9db6e0; background: rgba(42, 51, 70, 0.35); }
+
+/* 发布进度面板 */
+.pub-panel {
+  position: fixed; inset: 0; z-index: 90;
+  background: rgba(5, 6, 10, 0.6); backdrop-filter: blur(3px);
+  display: flex; align-items: flex-end; justify-content: center;
+}
+.pub-card {
+  width: 100%; max-width: 520px; margin: 0 auto 0;
+  background: var(--bg2); border: 1px solid var(--line); border-bottom: none;
+  border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+}
+.pub-head { display: flex; align-items: center; justify-content: space-between; font-size: 15px; margin-bottom: 8px; }
+.pub-close { color: var(--muted); font-size: 14px; padding: 4px 8px; }
+.pub-tip { font-size: 12px; color: var(--gold2); background: var(--gold-dim); border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; line-height: 1.6; }
+.pub-log {
+  background: #0b0c10; border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px; font-size: 12px; line-height: 1.8; color: #b9becc;
+  max-height: 240px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;
+  font-family: Consolas, monospace;
+}
+.pub-ops { display: flex; justify-content: flex-end; margin-top: 10px; }
+
+/* ---- 线上版专属样式 ---- */
+.online-badge{flex:none;font-size:10px;padding:2px 8px;border-radius:999px;background:var(--gold-dim);border:1px solid rgba(230,180,85,.45);color:var(--gold2)}
+.site-foot{padding:26px 16px 34px;text-align:center;color:#6b7180;font-size:11.5px;line-height:1.9}
+.site-foot a{color:var(--gold)}
+.rv-note{margin:8px 0 4px;font-size:12px;color:var(--muted);background:var(--card);border:1px dashed var(--line);border-radius:8px;padding:8px 12px}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast" class="toast" hidden></div>
+<script>
+const SITE = {"config":{"storeName":"小库·推理机制club·剧本本单","slogan":"今晚，来一场好局","announcement":"新店试营业：周三会员日全场盒装 8 折，散拼组队中～","contact":"预约微信：miwu001 ｜ 电话：138-0000-0000 ｜ 地址：示例市XX路88号 3F"},"scripts":[{"id":"seed-001","title":"病娇男孩的精分日记","cover":"","genre":["惊悚","推理"],"type":"盒装","playersMin":7,"playersMax":7,"male":4,"female":3,"duration":4,"difficulty":"进阶","price":98,"memberPrice":88,"author":"","publisher":"月半乙乙","intro":"一间心理诊室，一本写满七种笔迹的日记。\n当七个「他」轮流醒来，每个人都说自己才是真实的那个。\n翻到最后一页之前，请先确认——现在睁着眼睛的，究竟是谁？\n惊悚氛围与逻辑推理并重的经典盒装，新手进阶皆宜。","note":"恐怖程度中等，可安排 NPC 加场","featured":true,"createdAt":1761200000000,"updatedAt":1761200000000,"pinned":true,"reviews":[{"id":"rev-001","scriptId":"seed-001","name":"阿茶","rating":5,"content":"七个人格的设定太带感了，DM 演绎到位的话全程起鸡皮疙瘩。推理部分中等难度，新手也能跟上，强烈推荐！","source":"local","createdAt":1761000000000},{"id":"rev-002","scriptId":"seed-001","name":"莫得感情的菠萝头","rating":4,"content":"惊悚氛围拉满，中段有个反转真的没想到。扣一星是因为最后一小时节奏略拖，整体还是值得二刷。","source":"local","createdAt":1760600000000},{"id":"rev-003","scriptId":"seed-001","name":"网络玩家","rating":0,"content":"这个本开场破冰很能让人瞬间进入状态，随之而来的第一重解谜也很能调动玩家的积极性，开头玩起来就让人觉得很有意思。中间的演绎环节营造了诡异的氛围，最后的揭秘环节细思极恐。","source":"network","createdAt":1760200000000}],"rating":{"avg":4.5,"count":2,"total":3}},{"id":"seed-007","title":"山之神","cover":"","genre":["情感","沉浸"],"type":"独家","playersMin":6,"playersMax":6,"male":3,"female":3,"duration":5,"difficulty":"进阶","price":198,"memberPrice":178,"author":"","publisher":"","intro":"山有神，神有愿；人有人，人有憾。\n一座与世隔绝的山村，六个被「神明」选中的旅人。\n独家限定，含声光效果与专属 NPC 演绎。","note":"独家本，周末场次紧张，建议提前 3 天预约","featured":true,"createdAt":1757400000000,"updatedAt":1757400000000,"pinned":true,"reviews":[{"id":"rev-006","scriptId":"seed-007","name":"山间来客","rating":5,"content":"独家本确实名不虚传，声光效果和 NPC 演绎完全是另一个次元，结尾半小时全场安静得能听见心跳。","source":"local","createdAt":1758800000000}],"rating":{"avg":5,"count":1,"total":1}},{"id":"31dbf1a5-4b43-4bc4-b43d-67ab0e1ea9fc","title":"零的幻想","cover":"/uploads/1793891220575-1475dfbc.jpg","genre":[],"type":"盒装","playersMin":6,"playersMax":6,"male":4,"female":2,"duration":4,"difficulty":"进阶","price":68,"memberPrice":0,"author":"","publisher":"","intro":"《零的幻想》以架空的魔法世界为背景，围绕零塔内的诡异规则展开，玩家化身拥有特殊技能的六大角色，在封闭空间中遭遇连环离奇事件。核心任务为：吃透技能机制与建筑规则，通过层层递进的诡计推理，破解多重解答下的案件手法，梳理超长逻辑链还原真相。全程无需纠结复杂人物关系，专注设定运用与手法拆解，在8小时以上的沉浸式推演中，揭开所有谜题背后那层温暖而悲壮的底色。","note":"","featured":false,"pinned":false,"heat":0,"createdAt":1793891220576,"updatedAt":1793891220576,"reviews":[{"id":"a9d2b49c-5e32-4a4a-bf26-edb4b7ef3672","scriptId":"31dbf1a5-4b43-4bc4-b43d-67ab0e1ea9fc","name":"网络玩家3","rating":0,"content":"整体来说是近期难得的纯设定推理佳作，几乎没有冗余还原，全程都在抠诡计。前期学习成本高，但换来的是后期推理的丝滑。结局收束得很稳，把前面那些冷冰冰的技能名都赋予了意义，后劲比想象中大。推荐给能坐得住、爱啃硬骨头的推土机，新手慎入。","source":"network","createdAt":1793891160578},{"id":"48b29e7b-8d4c-4880-911c-1ea4bc3f221c","scriptId":"31dbf1a5-4b43-4bc4-b43d-67ab0e1ea9fc","name":"网络玩家2","rating":0,"content":"动线这块DM帮着梳理了大半，我们只需要盯着技能组合和手法可行性。最后那个长逻辑链推完，看着汇总的时间线大卡，确实有种豁然开朗的感觉。虽然中间有些小杠点，比如电梯和复制的配合细节没完全搞懂，但不影响整体爽感。","source":"network","createdAt":1793891100578},{"id":"a7a7ba90-0231-45e0-9920-7394ce6c15d3","scriptId":"31dbf1a5-4b43-4bc4-b43d-67ab0e1ea9fc","name":"网络玩家1","rating":0,"content":"开局就被按头学设定，两个本啃下来两小时起步，脑子嗡嗡的。好在设定讲人话，不像某些本学完就忘。3×3那块确实顶，尤其是第二个案子的平行解，车友们站起来拍黑板，那股兴奋劲儿现在还记得。盘到后期逻辑链拉得老长，有时候刚觉得顺了，DM一句话又把思路打回原形，只能闷头重新翻规则书。","source":"network","createdAt":1793891040578}],"rating":{"avg":0,"count":0,"total":3}},{"id":"3c9f75f5-6774-4a49-9e63-14b56c3dfafc","title":"病娇3近乎正常的我们","cover":"/uploads/1793888982267-cd79b728.jpg","genre":["架空","日式","推理"],"type":"盒装","playersMin":6,"playersMax":6,"male":3,"female":3,"duration":7,"difficulty":"进阶","price":108,"memberPrice":98,"author":"","publisher":"","intro":"清晨的阳光细腻而清晰。\n我走向窗边，看着寒热温差形成的水珠挂在玻璃上。\n它起初只是细细的一颗，缓缓地偏向了右侧，将另一颗水珠吞噬，随后陡然加速向左下方滑走。\n一颗、两颗、三颗。。\n每一颗水珠的轨迹都是如此相似。\n不过终究是庆幸的，今天的故事仍旧属于我们。\n我叫萧何，拥有七个孤独且热闹的分裂人格。\n我们的生活如架上落满灰尘的书本，平淡到毫无波澜，从未被血腥的手掌拾起，也并没有人喜欢。\n但我想，我们曾经失去的东西，也会很难过地想要找回我们吧。","note":"","featured":false,"pinned":false,"heat":0,"createdAt":1793888982269,"updatedAt":1793888982269,"reviews":[{"id":"fe726d2d-b469-4629-afed-4912307c97fe","scriptId":"3c9f75f5-6774-4a49-9e63-14b56c3dfafc","name":"网络玩家6","rating":0,"content":"如果说《病娇男孩的精分日记》是故事的开头的话，《病娇3：近乎正常的我们》像是一部系列电影的完美结局。","source":"network","createdAt":1793888922270},{"id":"d8f289b3-a626-45a7-b708-23899f54bd03","scriptId":"3c9f75f5-6774-4a49-9e63-14b56c3dfafc","name":"网络玩家5","rating":0,"content":"ok阐述完我的心情，开始回归到剧本咯。","source":"network","createdAt":1793888862270},{"id":"fd3cfd98-689f-4df8-b273-c8bb0de5e106","scriptId":"3c9f75f5-6774-4a49-9e63-14b56c3dfafc","name":"网络玩家4","rating":0,"content":"还是很深刻，也十分喜欢，所以又紧张又兴奋。","source":"network","createdAt":1793888802270},{"id":"f30d4555-0d62-404d-b81d-89ec81635598","scriptId":"3c9f75f5-6774-4a49-9e63-14b56c3dfafc","name":"网络玩家3","rating":0,"content":"体验的斐然老师的所有作品都是还原偏多，所以会对病娇3有顾虑但是我个人对病娇1的印象","source":"network","createdAt":1793888742270},{"id":"b0a21f5c-5fc9-42a6-89f9-b7cce9ce6f6f","scriptId":"3c9f75f5-6774-4a49-9e63-14b56c3dfafc","name":"网络玩家2","rating":0,"content":"我本人是一个水龙头硬核本玩家且属于推理玩家，从接触病娇1开始，","source":"network","createdAt":1793888682270},{"id":"1a501839-f94d-42d9-8b0f-60c201793080","scriptId":"3c9f75f5-6774-4a49-9e63-14b56c3dfafc","name":"网络玩家1","rating":0,"content":"很荣幸上了斐然老师大连展《病娇3》首车私车","source":"network","createdAt":1793888622270}],"rating":{"avg":0,"count":0,"total":6}},{"id":"seed-002","title":"漓川怪谈簿","cover":"","genre":["情感","变格","沉浸"],"type":"城限","playersMin":6,"playersMax":6,"male":3,"female":3,"duration":5,"difficulty":"进阶","price":158,"memberPrice":138,"author":"","publisher":"梗百科文化","intro":"漓水之上，川流不息；怪谈簿里，皆是执念。\n六个被卷入怪谈的旅人，在现实与妖异的夹缝中打捞自己遗忘的过去。\n变格世界观下的情感沉浸本，结尾有泪点，请备好纸巾。","note":"含换装环节，建议提前 15 分钟到店","featured":true,"createdAt":1760500000000,"updatedAt":1760500000000,"pinned":false,"reviews":[{"id":"rev-004","scriptId":"seed-002","name":"桃桃乌龙","rating":5,"content":"哭到纸巾不够用……漓水之上的故事后劲太大了，换装环节仪式感满分， DM 小姐姐的演绎直接封神。","source":"local","createdAt":1759900000000},{"id":"rev-005","scriptId":"seed-002","name":"夜航西飞","rating":4,"content":"变格世界观很吃设定，情感浓度高，推理成分不多。适合情感本爱好者，硬核推理玩家可能会觉得淡。","source":"local","createdAt":1759500000000}],"rating":{"avg":4.5,"count":2,"total":2}},{"id":"seed-003","title":"年轮","cover":"","genre":["情感","沉浸"],"type":"城限","playersMin":7,"playersMax":7,"male":4,"female":3,"duration":4.5,"difficulty":"进阶","price":148,"memberPrice":128,"author":"","publisher":"","intro":"树有年轮，人有一圈圈刻进骨头的岁月。\n一场同学聚会，把七个成年人拉回那段盛夏。\n故事不复杂，复杂的是回不去的我们。","note":"","featured":false,"createdAt":1759900000000,"updatedAt":1759900000000,"pinned":false,"reviews":[],"rating":{"avg":0,"count":0,"total":0}},{"id":"seed-004","title":"叫爸爸","cover":"","genre":["欢乐","机制"],"type":"盒装","playersMin":7,"playersMax":7,"male":4,"female":3,"duration":4,"difficulty":"新手","price":88,"memberPrice":78,"author":"","publisher":"","intro":"全程高能爆笑的家庭伦理大戏，嘴炮与反转齐飞。\n谁占理不重要，谁声音大才重要。\n团建、生日、组局破冰首选，无推理压力。","note":"适合新手与团建","featured":false,"createdAt":1759300000000,"updatedAt":1759300000000,"pinned":false,"reviews":[{"id":"rev-007","scriptId":"seed-004","name":"快乐星球球长","rating":4,"content":"团建来的，六个人笑到脸酸。机制简单粗暴，笑点密集，下班解压首选。","source":"local","createdAt":1758200000000}],"rating":{"avg":4,"count":1,"total":1}},{"id":"seed-005","title":"无双","cover":"","genre":["情感","古风","沉浸"],"type":"城限","playersMin":6,"playersMax":6,"male":3,"female":3,"duration":5,"difficulty":"进阶","price":158,"memberPrice":138,"author":"","publisher":"","intro":"乱世之中，有人求功名，有人求故人，有人只求一个「无双」的答案。\n古风情感沉浸，文笔扎实，后期情感爆发力强。","note":"","featured":false,"createdAt":1758600000000,"updatedAt":1758600000000,"pinned":false,"reviews":[],"rating":{"avg":0,"count":0,"total":0}},{"id":"seed-006","title":"青楼","cover":"","genre":["欢乐","古风","机制"],"type":"盒装","playersMin":7,"playersMax":7,"male":3,"female":4,"duration":4,"difficulty":"新手","price":78,"memberPrice":68,"author":"","publisher":"","intro":"醉香楼一年一度的花魁大赛开幕，各怀鬼胎的客人与姑娘们同台飙戏。\n古风欢乐机制本，互动性拉满，笑点密集。","note":"","featured":false,"createdAt":1758000000000,"updatedAt":1758000000000,"pinned":false,"reviews":[],"rating":{"avg":0,"count":0,"total":0}},{"id":"seed-008","title":"云使","cover":"","genre":["情感","现代"],"type":"城限","playersMin":6,"playersMax":6,"male":3,"female":3,"duration":5,"difficulty":"进阶","price":168,"memberPrice":148,"author":"","publisher":"","intro":"传说每个人头顶都有一朵云，云里住着一位信使。\n当六封没有寄出的信同时抵达，故事才真正开始。\n现代情感本，节奏舒缓，后劲十足。","note":"","featured":false,"createdAt":1756800000000,"updatedAt":1756800000000,"pinned":false,"reviews":[],"rating":{"avg":0,"count":0,"total":0}},{"id":"seed-009","title":"废弃病院7号房（示例剧本）","cover":"","genre":["恐怖","本格"],"type":"盒装","playersMin":6,"playersMax":6,"male":3,"female":3,"duration":4,"difficulty":"进阶","price":108,"memberPrice":98,"author":"","publisher":"","intro":"这是一条示例剧本简介：三十年前封闭的病院突然亮起一盏灯，你们六人受托进入调查。恐怖搜证 + 本格推理，胆小者可选择「开灯模式」。\n（此条为演示数据，主持人可在后台直接删除或修改）","note":"示例数据，可删除","featured":false,"createdAt":1756200000000,"updatedAt":1756200000000,"pinned":false,"reviews":[],"rating":{"avg":0,"count":0,"total":0}},{"id":"seed-010","title":"迷雾酒店谋杀案（示例剧本）","cover":"","genre":["推理","本格","机制"],"type":"盒装","playersMin":6,"playersMax":6,"male":2,"female":4,"duration":4.5,"difficulty":"硬核","price":118,"memberPrice":98,"author":"","publisher":"","intro":"这是一条示例剧本简介：暴风雪夜，山顶酒店与外界失联，一夜之间接连发生两起不可能犯罪。封闭空间、双重诡计、多重反转，献给硬核推理爱好者。\n（此条为演示数据，主持人可在后台直接删除或修改）","note":"示例数据，可删除","featured":false,"createdAt":1755600000000,"updatedAt":1755600000000,"pinned":false,"reviews":[{"id":"rev-008","scriptId":"seed-010","name":"暴风雪山庄庄主","rating":5,"content":"双重不可能犯罪+封闭空间，诡计扎实，逻辑链完整，硬核推理党的狂欢。示例本都有这质量，正式本还得了？","source":"local","createdAt":1755000000000}],"rating":{"avg":5,"count":1,"total":1}}],"generatedAt":1794206793323};
+/* ================= 线上静态版（只读） ================= */
+const G = ['情感','恐怖','惊悚','推理','欢乐','机制','阵营','本格','变格','沉浸','古风','现代'];
+const TYPES = ['盒装','城限','独家'];
+const app = document.getElementById('app');
+const $ = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => [...(r || document).querySelectorAll(s)];
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const toast = (m) => { const t = $('#toast'); t.textContent = m; t.hidden = false; clearTimeout(t._t); t._t = setTimeout(() => t.hidden = true, 2400); };
+function hashCode(str){let h=0;for(const c of String(str))h=(h*31+c.codePointAt(0))>>>0;return h}
+const GRADS=[['#392b5e','#7b4fa2'],['#173a5e','#2e7d8e'],['#5a2333','#a04a5e'],['#1f4030','#4c8a5a'],['#57431c','#9a7d3a'],['#3d1f1f','#8a4438'],['#252a4a','#5a5f9e'],['#20303a','#3e6a6a']];
+const fmtPlayers=(s)=>s.playersMin===s.playersMax?s.playersMin+'人':s.playersMin+'-'+s.playersMax+'人';
+const fmtGender=(s)=>(s.male==null&&s.female==null)?'':((s.male??'?')+'男'+(s.female??'?')+'女');
+const fmtDuration=(s)=>'约'+(Number.isInteger(+s.duration)?+s.duration:(+s.duration).toFixed(1))+'小时';
+const fmtDate=(ts)=>{const d=new Date(ts);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const badge=(t)=>'<span class="badge '+({盒装:'box',城限:'city',独家:'excl'}[t]||'box')+'">'+esc(t)+'</span>';
+const fmtPrice=(s)=>(s.memberPrice!=null&&s.memberPrice>0&&s.memberPrice<s.price)
+  ?'<span class="price">¥'+esc(s.price)+'<small>/人</small></span><span class="member-price">会员¥'+esc(s.memberPrice)+'</span>'
+  :'<span class="price">¥'+esc(s.price)+'<small>/人</small></span>';
+function starsHtml(val,count){const pct=Math.max(0,Math.min(100,val/5*100));
+  return '<span class="stars"><span class="stars-bg">★★★★★</span><span class="stars-fill" style="width:'+pct+'%">★★★★★</span></span>'+(count!=null?'<span class="stars-num">'+(val>0?val.toFixed(1):'—')+' · '+count+'条</span>':'')}
+const coverPh=(s,big)=>{const g=GRADS[hashCode(s.id||s.title)%GRADS.length];
+  return '<div class="cover-ph" style="background:linear-gradient(150deg,'+g[0]+','+g[1]+')"><div class="ph-title"'+(big?' style="font-size:22px"':'')+'>'+esc(s.title)+'</div><div class="ph-tag">'+esc((s.genre&&s.genre[0])||'剧本')+'</div></div>'};
+const coverHtml=(s,big)=>s.cover?'<img src="'+esc(s.cover)+'" alt="'+esc(s.title)+'封面" loading="lazy" data-ph-title="'+esc(s.title)+'" data-ph-genre="'+esc((s.genre&&s.genre[0])||'剧本')+'">':coverPh(s,big);
+document.addEventListener('error',(e)=>{const img=e.target;if(!(img instanceof HTMLImageElement)||!img.dataset.phTitle)return;
+  const g=GRADS[hashCode(img.dataset.phTitle)%GRADS.length];const ph=document.createElement('div');ph.className='cover-ph';
+  ph.style.background='linear-gradient(150deg,'+g[0]+','+g[1]+')';
+  ph.innerHTML='<div class="ph-title">'+esc(img.dataset.phTitle)+'</div><div class="ph-tag">'+esc(img.dataset.phGenre||'剧本')+'</div>';img.replaceWith(ph);},true);
+
+const state = { q:'', genre:'', type:'', players:'', sort:'new' };
+const PF=[{key:'',label:'全部人数'},{key:'le5',label:'≤5人'},{key:'6',label:'6人'},{key:'7',label:'7人'},{key:'8',label:'8人'},{key:'ge8',label:'8人+'}];
+
+function listScripts(){
+  const kw=state.q.trim().toLowerCase();
+  let l=SITE.scripts.filter(s=>{
+    if(kw&&!(s.title+'\n'+(s.author||'')+'\n'+(s.publisher||'')+'\n'+(s.intro||'')).toLowerCase().includes(kw))return false;
+    if(state.genre&&!s.genre.includes(state.genre))return false;
+    if(state.type&&s.type!==state.type)return false;
+    if(state.players==='le5'&&s.playersMax>5)return false;
+    if(['6','7','8'].includes(state.players)&&!(s.playersMin<=+state.players&&s.playersMax>=+state.players))return false;
+    if(state.players==='ge8'&&s.playersMin<8)return false;
+    return true;});
+  if(state.sort==='priceAsc')l.sort((a,b)=>a.price-b.price);
+  else if(state.sort==='priceDesc')l.sort((a,b)=>b.price-a.price);
+  else if(state.sort==='players')l.sort((a,b)=>b.playersMax-a.playersMax);
+  else if(state.sort==='rating')l.sort((a,b)=>(b.rating.avg||0)-(a.rating.avg||0));
+  else l.sort((a,b)=>(b.pinned-a.pinned)||(b.createdAt-a.createdAt));
+  return l;
+}
+const chipRow=(items,cur)=>items.map(it=>'<button class="chip'+(cur===it.key?' on':'')+'" data-pick="'+esc(it.key)+'">'+esc(it.label)+'</button>').join('');
+
+function renderHome(){
+  const c=SITE.config, list=listScripts(), pinned=SITE.scripts.filter(s=>s.pinned);
+  const cards=list.map(s=>'<a class="card'+(s.pinned?' is-pinned':'')+'" href="#/d/'+esc(s.id)+'"><div class="cover">'+coverHtml(s)+'</div><div class="info">'+
+    '<div class="title-row"><span class="title">'+esc(s.title)+'</span>'+badge(s.type)+(s.pinned?'<span class="pin-flag">📌</span>':(s.featured?'<span class="fire">🔥</span>':''))+'</div>'+
+    '<div class="tags">'+s.genre.map(g=>'<span class="tag">'+esc(g)+'</span>').join('')+'</div>'+
+    '<div class="meta">'+fmtPlayers(s)+(fmtGender(s)?' · '+fmtGender(s):'')+' · '+fmtDuration(s)+' · '+esc(s.difficulty)+'</div>'+
+    '<div class="bottom">'+fmtPrice(s)+'<span class="rate-wrap"><span class="rate">'+(s.rating.count?starsHtml(s.rating.avg,s.rating.count):'<span class="rate none">暂无评分</span>')+'</span></span></div></div></a>').join('');
+  app.innerHTML='<div class="page">'+
+   '<header class="topbar"><div class="brand"><div class="logo">🎭</div><div><h1>'+esc(c.storeName)+'</h1><div class="slogan">'+esc(c.slogan||'今晚，来一场好局')+'</div></div></div>'+
+   '<div class="total"><span class="online-badge">线上版</span><br>共<b>'+SITE.scripts.length+'</b>本</div></header>'+
+   (c.announcement?'<div class="notice"><span class="icon">📢</span><span class="txt">'+esc(c.announcement)+'</span></div>':'')+
+   '<div class="search"><input id="q" type="search" placeholder="搜索剧本名 / 作者 / 发行" value="'+esc(state.q)+'"></div>'+
+   '<div class="chip-row" data-group="type">'+chipRow([{key:'',label:'全部'}].concat(TYPES.map(t=>({key:t,label:t}))),state.type)+'</div>'+
+   '<div class="chip-row" data-group="genre">'+chipRow([{key:'',label:'全部题材'}].concat(G.map(g=>({key:g,label:g}))),state.genre)+'</div>'+
+   '<div class="chip-row" data-group="players">'+chipRow(PF,state.players)+'</div>'+
+   '<div class="sort-row"><span>筛选结果：'+list.length+' 本</span><select id="sort">'+
+     ['new|最新上架','rating|评分最高','priceAsc|价格从低到高','priceDesc|价格从高到低','players|人数最多'].map(o=>{const[v,n]=o.split('|');return '<option value="'+v+'"'+(state.sort===v?' selected':'')+'>'+n+'</option>'}).join('')+'</select></div>'+
+   (pinned.length?'<section class="rec"><div class="sec-title">📌 店长推荐</div><div class="rec-scroll">'+pinned.map(s=>
+     '<a class="rec-card" href="#/d/'+esc(s.id)+'"><div class="rec-cover">'+coverHtml(s)+'</div><div class="rec-name">'+esc(s.title)+'</div><div class="rec-sub">'+fmtPlayers(s)+' · '+esc(s.type)+'</div><div class="rec-price">¥'+esc(s.price)+'<small>/人</small></div></a>').join('')+'</div></section>':'')+
+   '<div class="sec-title plain">📚 全部剧本</div><main class="list">'+(cards||'<div class="empty"><div class="big">🎭</div>没有找到符合条件的剧本</div>')+'</main>'+
+   '<div class="site-foot">本页为线上浏览版 · 更新于 '+fmtDate(SITE.generatedAt)+'<br>写评价 / 组局预约请到店或 <a href="javascript:void(0)" id="foot-contact">联系店家</a></div></div>';
+  $('#q').addEventListener('input',e=>{state.q=e.target.value;const p=e.target.selectionStart;renderHome();const q2=$('#q');q2.focus();q2.setSelectionRange(p,p);});
+  $$('.chip').forEach(b=>b.addEventListener('click',()=>{state[b.closest('.chip-row').dataset.group]=b.dataset.pick;renderHome();}));
+  $('#sort').addEventListener('change',e=>{state.sort=e.target.value;renderHome();});
+  const fc=$('#foot-contact');if(fc)fc.addEventListener('click',()=>copyContact());
+}
+
+function copyContact(){
+  const t=SITE.config.contact||'';
+  if(!t)return toast('店家暂未填写联系方式');
+  if(navigator.clipboard)navigator.clipboard.writeText(t).then(()=>toast('已复制：\n'+t),()=>toast(t));else toast(t);
+}
+
+function renderDetail(id){
+  const s=SITE.scripts.find(x=>x.id===id);
+  if(!s){location.hash='#/';return;}
+  const gen=fmtGender(s);
+  const cells=[{k:'人数',v:fmtPlayers(s)+(gen?'<div class="k" style="margin-top:2px">'+esc(gen)+'</div>':'')},{k:'时长',v:fmtDuration(s)},{k:'难度',v:esc(s.difficulty)},{k:'类型',v:esc(s.type)},{k:'发行',v:esc(s.publisher)||'—'},{k:'作者',v:esc(s.author)||'—'}];
+  if(s.heat>0)cells.push({k:'网络热度',v:'★'.repeat(s.heat),gold:true});
+  const revHtml=s.reviews.length?s.reviews.map(r=>'<div class="review"><div class="rv-avatar" style="background:'+GRADS[hashCode(r.name)%GRADS.length][1]+'">'+esc((r.name||'匿').trim()[0]||'匿')+'</div><div class="rv-main"><div class="rv-head"><span class="rv-name">'+esc(r.name)+'</span>'+(r.source==='network'?'<span class="rv-src net">网络</span>':'<span class="rv-src">玩家</span>')+(r.source==='local'?starsHtml(r.rating):'')+'<span class="rv-time">'+fmtDate(r.createdAt)+'</span></div><div class="rv-content">'+esc(r.content)+'</div></div></div>').join(''):'<div class="rv-empty">还没有评价，来店里体验后给个评价吧～</div>';
+  app.innerHTML='<div class="page"><button class="back-btn" id="back">←</button>'+
+   '<div class="d-hero">'+coverHtml(s,true)+'<div class="shade"></div></div>'+
+   '<div class="d-head"><div class="title">'+esc(s.title)+' '+badge(s.type)+(s.pinned?'<span class="pin-flag">📌 店长推荐</span>':(s.featured?'<span class="fire">🔥 热本</span>':''))+'</div>'+
+   '<div class="sub">'+s.genre.map(g=>'#'+esc(g)).join(' ')+'　·　上架于 '+fmtDate(s.createdAt)+'</div></div>'+
+   '<div class="d-grid">'+cells.map(m=>'<div class="d-cell"><div class="k">'+esc(m.k)+'</div><div class="v'+(m.gold?' gold':'')+'">'+m.v+'</div></div>').join('')+'</div>'+
+   '<div class="d-section"><h3>剧本简介</h3><div class="body">'+esc(s.intro||'简介暂未填写～')+(s.note?'<div class="d-note">📌 '+esc(s.note)+'</div>':'')+'</div></div>'+
+   '<div class="d-section"><h3>玩家评价</h3>'+
+   '<div class="rating-card"><div class="rc-left"><div class="rc-avg">'+(s.rating.count?s.rating.avg.toFixed(1):'—')+'</div><div class="rc-stars">'+starsHtml(s.rating.avg)+'</div><div class="rc-count">'+(s.rating.count?s.rating.count+' 位玩家评分':'还没有玩家评分')+(s.rating.total>s.rating.count?' · '+(s.rating.total-s.rating.count)+' 条网络评价':'')+'</div></div></div>'+
+   '<div class="rv-note">线上版暂不支持写评价，到店体验后即可提交 ✍️</div>'+revHtml+'</div>'+
+   '<div class="d-footer"></div>'+
+   '<div class="price-bar"><div>'+fmtPrice(s)+'</div><button class="contact-btn" id="copy-contact">联系店家预约</button></div></div>';
+  $('#back').addEventListener('click',()=>location.hash='#/');
+  $('#copy-contact').addEventListener('click',copyContact);
+}
+
+window.addEventListener('hashchange',()=>{window.scrollTo(0,0);const h=location.hash||'#/';const m=h.match(/^#\/d\/([\w-]+)$/);m?renderDetail(m[1]):renderHome();});
+renderHome();
+</script>
+</body>
+</html>
